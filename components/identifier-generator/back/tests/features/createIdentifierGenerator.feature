@@ -149,6 +149,11 @@ Feature: Create Identifier Generator
     Then I should get an error with message 'delimiter: This value is too long. It should have 100 characters or less.'
     And the identifier should not be created
 
+  Scenario: Cannot create an identifier generator with delimiter with invalid characters
+    When I try to create an identifier generator with delimiter ' , '
+    Then I should get an error with message 'delimiter: delimiter must not contain a comma, a semicolon or any space'
+    And the identifier should not be created
+
   # Code
   Scenario: Cannot create an identifier generator with blank code
     When I try to create an identifier generator with code ''
