@@ -15,6 +15,19 @@ jest.mock('./utils/generateRandomId');
 
 const MAX_CRITERIA_PER_CATALOG = 25;
 
+beforeEach(() => {
+    mockFetchResponses([
+        {
+            url: '/rest/catalogs/attributes?page=1&limit=20&search=&types=identifier%2Ctext%2Ctextarea%2Csimpleselect%2Cmultiselect%2Cnumber%2Cmetric%2Cboolean%2Cdate',
+            json: 0,
+        },
+        {
+            url: '/rest/catalogs/product-selection-criteria/product/count',
+            json: 0,
+        },
+    ]);
+});
+
 test('it displays an empty message if there is no criteria', () => {
     mockFetchResponses([
         {
