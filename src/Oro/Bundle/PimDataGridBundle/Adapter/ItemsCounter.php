@@ -34,6 +34,11 @@ class ItemsCounter
             return $this->countImpactedProducts->count($filters);
         }
 
+        if ($gridName === OroToPimGridFilterAdapter::ATTRIBUTE_GRID_NAME) {
+            // @TODO RAB-1260: Use a query to count attribute group
+            return 0;
+        }
+
         if (!isset($filters[0]['value'])) {
             throw new \Exception('There should one filter containing the items to filter.');
         }

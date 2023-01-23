@@ -553,7 +553,6 @@ pim_mass_edit:
             error:   Mass delete <strong>%label%</strong> failed
             warning: Mass delete <strong>%label%</strong> finished with some warnings
             success: Mass delete <strong>%label%</strong> finished
-
 job_execution.summary:
     mass_edited: Mass edited
     skipped_products: Skipped products
