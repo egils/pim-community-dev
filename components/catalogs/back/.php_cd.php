@@ -61,6 +61,7 @@ $rules = [
             'Akeneo\Connectivity\Connection\ServiceApi',
             'Akeneo\Tool\Bundle\MeasureBundle\ServiceApi',
             'Akeneo\Pim\Enrichment\Component\Product\Exception\ObjectNotFoundException',
+            'Akeneo\Platform\Bundle\FeatureFlagBundle\FeatureFlags',
 
             /**********************************************************************************************************/
             /* Below are dependencies that we have, but we shouldn't rely on them.
