@@ -51,3 +51,8 @@ services:
       - '@Akeneo\Pim\Structure\Component\Query\PublicApi\Attribute\GetGroupedAttributes'
       - '@pim_user.context.user'
       - '@translator'
+
+  Akeneo\Pim\Automation\IdentifierGenerator\Infrastructure\Controller\UpdateNomenclatureController:
+    public: true
+    arguments:
+      - '@Akeneo\Pim\Automation\IdentifierGenerator\Application\Update\UpdateNomenclatureHandler'
