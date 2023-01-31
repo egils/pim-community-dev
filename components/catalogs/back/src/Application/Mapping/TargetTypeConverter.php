@@ -21,6 +21,9 @@ final class TargetTypeConverter
             'pim_catalog_textarea',
             'pim_catalog_simpleselect',
         ],
+        'string+uri' => [
+            'pim_catalog_image',
+        ],
     ];
 
     /**

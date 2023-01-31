@@ -47,6 +47,13 @@ class TargetTypeConverterTest extends TestCase
                     'pim_catalog_simpleselect',
                 ],
             ],
+            'string+uri' => [
+                'string',
+                'uri',
+                [
+                    'pim_catalog_image',
+                ],
+            ],
             'boolean' => [
                 'boolean',
                 '',
