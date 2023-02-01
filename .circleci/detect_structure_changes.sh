@@ -41,6 +41,7 @@ echo "##"
 
 echo "Save composer.lock"
 cp composer.lock /tmp/composer.lock
+cp composer.json /tmp/composer.json
 
 echo "Checkout EE 6.0 branch..."
 git branch -D real60 || true
@@ -88,7 +89,9 @@ git checkout -- .
 echo "Checkout EE PR branch (or 7.0 if it does not exist)..."
 git checkout $PR_BRANCH || git checkout 7.0
 cp /tmp/composer.lock ./composer.lock
+cp /tmp/composer.json ./composer.json
 touch composer.lock
+touch composer.json
 sudo chown 1000:1000 -R .
 make vendor
 
