@@ -81,6 +81,7 @@ echo "## STEP 2: apply PR migrations on 6.0 database and index"
 echo "##"
 
 echo "Restore Git repository as how it was at the beginning..."
+sudo chown circleci:circleci -R ../project
 git clean -f
 git checkout -- .
 
