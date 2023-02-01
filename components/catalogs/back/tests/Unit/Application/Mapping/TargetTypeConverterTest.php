@@ -11,6 +11,8 @@ use PHPUnit\Framework\TestCase;
 /**
  * @copyright 2023 Akeneo SAS (http://www.akeneo.com)
  * @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ *
+ * @covers \Akeneo\Catalogs\Application\Service\TargetTypeConverter;
  */
 class TargetTypeConverterTest extends TestCase
 {
@@ -38,7 +40,7 @@ class TargetTypeConverterTest extends TestCase
     public function validConversionProvider(): array
     {
         return [
-            'string' => [
+            'attribute types for a string target' => [
                 'string',
                 '',
                 [
@@ -60,6 +62,13 @@ class TargetTypeConverterTest extends TestCase
                 'date-time',
                 [
                     'pim_catalog_date',
+                ],
+            ],
+            'attribute types for a number target' => [
+                'number',
+                '',
+                [
+                    'pim_catalog_price_collection',
                 ],
             ],
         ];
