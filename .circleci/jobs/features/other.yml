@@ -239,6 +239,7 @@ jobs:
                     command: |
                         git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
                         git fetch origin
+                        git reset --hard
             -   run:
                     name: Test missing database and index structure migrations
                     command: vendor/akeneo/pim-community-dev/.circleci/detect_structure_changes.sh $CIRCLE_BRANCH

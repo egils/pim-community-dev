@@ -50,20 +50,14 @@ sudo chown 1000:1000 -R .
 echo "Creation of image with php 8.0..."
 make php-image-dev
 
+docker-compose -f ./docker-compose.yml run -u www-data --rm php composer config --no-plugins allow-plugins.dealerdirect/phpcodesniffer-composer-installer false
+
 echo "Update composer dependencies"
 make vendor
 
 if [ -d "vendor/akeneo/pim-community-dev" ]; then
     echo "Copy CE migrations into EE to install 6.0 branch..."
     cp -R vendor/akeneo/pim-community-dev/upgrades/schema/* upgrades/schema
-fi
-
-echo "Enable Onboarder bundle on 6.0 branch..."
-sudo chown 1000:1000 composer.json
-docker-compose run --rm php composer config repositories.onboarder '{ "type": "vcs", "url": "https://github.com/akeneo/pim-onboarder.git", "branch": "7.0" }'
-docker-compose run --rm php composer require "akeneo/pim-onboarder:^4.2.1"
-if [ -d "vendor/akeneo/pim-onboarder" ]; then
-    sed -i "s~];~    Akeneo\\\Onboarder\\\Bundle\\\PimOnboarderBundle::class => ['all' => true],\n];~g" ./config/bundles.php
 fi
 
 echo "Export env vars from .env..."
@@ -100,11 +94,6 @@ make vendor
 if [ -d "vendor/akeneo/pim-community-dev" ]; then
     echo "Copy CE migrations into EE to launch branch migrations..."
     cp -R vendor/akeneo/pim-community-dev/upgrades/schema/* upgrades/schema
-fi
-
-echo "Enable Onboarder bundle on PR branch..."
-if [ -d "vendor/akeneo/pim-onboarder" ]; then
-    sed -i "s~];~    Akeneo\\\Onboarder\\\Bundle\\\PimOnboarderBundle::class => ['all' => true],\n];~g" ./config/bundles.php
 fi
 
 echo "Export env vars from .env..."
