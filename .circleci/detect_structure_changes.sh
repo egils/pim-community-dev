@@ -7,8 +7,8 @@
 # For an EE build, EE $PR_BRANCH is used. If CE $PR_BRANCH exists, then it is used. Otherwise CE 7.0 is used.
 #
 # It works in 4 steps:
-#   - step 1: Checkout 5.0 code to be able to install a 5.0 database and index.
-#   - step 2: Checkout back to PR code to be able to apply PR migrations on the 5.0 database and index. Dump the results.
+#   - step 1: Checkout 6.0 code to be able to install a 6.0 database and index.
+#   - step 2: Checkout back to PR code to be able to apply PR migrations on the 6.0 database and index. Dump the results.
 #   - step 3: Install fresh branch database and indexes. Dump the results.
 #   - step 4: Compare the results of step 3 and step 4. If there is a diff, that means a migration is missing.
 
@@ -34,32 +34,34 @@ mkdir /tmp/structure_changes
 mkdir -p ~/.composer
 sudo chown 1000:1000 ~/.composer
 
-## STEP 1: install 5.0 database and index
+## STEP 1: install 6.0 database and index
 echo "##"
-echo "## STEP 1: install 5.0 database and index"
+echo "## STEP 1: install 6.0 database and index"
 echo "##"
 
 echo "Save composer.lock"
 cp composer.lock /tmp/composer.lock
 
-echo "Checkout EE 5.0 branch..."
-git branch -D real50 || true
-git checkout -b real50 --track origin/5.0
+echo "Checkout EE 6.0 branch..."
+git branch -D real60 || true
+git checkout -b real60 --track origin/6.0
 sudo chown 1000:1000 -R .
 
-echo "Creation of image with php 7.3..."
+echo "Creation of image with php 8.0..."
 make php-image-dev
 
 echo "Update composer dependencies"
 make vendor
 
-echo "Copy CE migrations into EE to install 5.0 branch..."
-cp -R vendor/akeneo/pim-community-dev/upgrades/schema/* upgrades/schema
+if [ -d "vendor/akeneo/pim-community-dev" ]; then
+    echo "Copy CE migrations into EE to install 6.0 branch..."
+    cp -R vendor/akeneo/pim-community-dev/upgrades/schema/* upgrades/schema
+fi
 
-echo "Enable Onboarder bundle on 5.0 branch..."
+echo "Enable Onboarder bundle on 6.0 branch..."
 sudo chown 1000:1000 composer.json
 docker-compose run --rm php composer config repositories.onboarder '{ "type": "vcs", "url": "https://github.com/akeneo/pim-onboarder.git", "branch": "7.0" }'
-docker-compose run --rm php php -d memory_limit=5G /usr/local/bin/composer require "akeneo/pim-onboarder:^4.2.1"
+docker-compose run --rm php composer require "akeneo/pim-onboarder:^4.2.1"
 if [ -d "vendor/akeneo/pim-onboarder" ]; then
     sed -i "s~];~    Akeneo\\\Onboarder\\\Bundle\\\PimOnboarderBundle::class => ['all' => true],\n];~g" ./config/bundles.php
 fi
@@ -75,13 +77,13 @@ echo "APP_CONNECTION_ERROR_INDEX_NAME=akeneo_connectivity_connection_error_test"
 echo "Clean cache..."
 APP_ENV=test make cache
 
-echo "Install 5.0 database and indexes..."
+echo "Install 6.0 database and indexes..."
 APP_ENV=test make database
 
 
-## STEP 2: apply PR migrations on 5.0 database and index
+## STEP 2: apply PR migrations on 6.0 database and index
 echo "##"
-echo "## STEP 2: apply PR migrations on 5.0 database and index"
+echo "## STEP 2: apply PR migrations on 6.0 database and index"
 echo "##"
 
 echo "Restore Git repository as how it was at the beginning..."
@@ -95,8 +97,10 @@ touch composer.lock
 sudo chown 1000:1000 -R .
 make vendor
 
-echo "Copy CE migrations into EE to launch branch migrations..."
-cp -R vendor/akeneo/pim-community-dev/upgrades/schema/* upgrades/schema
+if [ -d "vendor/akeneo/pim-community-dev" ]; then
+    echo "Copy CE migrations into EE to launch branch migrations..."
+    cp -R vendor/akeneo/pim-community-dev/upgrades/schema/* upgrades/schema
+fi
 
 echo "Enable Onboarder bundle on PR branch..."
 if [ -d "vendor/akeneo/pim-onboarder" ]; then
@@ -117,16 +121,16 @@ APP_ENV=test make cache
 echo "Launch branch migrations..."
 docker-compose run --rm php bin/console doctrine:migrations:migrate --env=test --no-interaction
 
-echo "Dump 5.0 with migrations database..."
-docker-compose exec -T mysql mysqldump --no-data --skip-opt --skip-comments --password=$APP_DATABASE_PASSWORD --user=$APP_DATABASE_USER $APP_DATABASE_NAME | sed 's/ AUTO_INCREMENT=[0-9]*\b//g' > /tmp/structure_changes/dump_50_database_with_migrations.sql
+echo "Dump 6.0 with migrations database..."
+docker-compose exec -T mysql mysqldump --no-data --skip-opt --skip-comments --password=$APP_DATABASE_PASSWORD --user=$APP_DATABASE_USER $APP_DATABASE_NAME | sed 's/ AUTO_INCREMENT=[0-9]*\b//g' > /tmp/structure_changes/dump_60_database_with_migrations.sql
 
-echo "Dump 5.0 with migrations index..."
-docker-compose exec -T elasticsearch curl -XGET "$APP_INDEX_HOSTS/_all/_mapping"|json_pp --json_opt=canonical,pretty > /tmp/structure_changes/dump_50_index_with_migrations.json
+echo "Dump 6.0 with migrations index..."
+docker-compose exec -T elasticsearch curl -XGET "$APP_INDEX_HOSTS/_all/_mapping"|json_pp --json_opt=canonical,pretty > /tmp/structure_changes/dump_60_index_with_migrations.json
 
 
-## STEP 3: install fresh branch database and indexes
+## STEP 3: install fresh branch database and indexes
 echo "##"
-echo "## STEP 3: install fresh branch database and indexes"
+echo "## STEP 3: install fresh branch database and indexes"
 echo "##"
 
 echo "Install fresh branch database and indexes..."
@@ -144,10 +148,10 @@ echo "##"
 echo "## STEP 4: compare the results"
 echo "##"
 
-echo "Compare database 50+PR migrations from database PR..."
-diff /tmp/structure_changes/dump_50_database_with_migrations.sql /tmp/structure_changes/dump_branch_database.sql --context=10
+echo "Compare database 60+PR migrations from database PR..."
+diff /tmp/structure_changes/dump_60_database_with_migrations.sql /tmp/structure_changes/dump_branch_database.sql --context=10
 
-echo "Compare index 50+PR migrations from index PR..."
-sed -i -r 's/([0-9]+_[0-9]+_[0-9]+_)?[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}/version_uuid/g' /tmp/structure_changes/dump_50_index_with_migrations.json
+echo "Compare index 60+PR migrations from index PR..."
+sed -i -r 's/([0-9]+_[0-9]+_[0-9]+_)?[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}/version_uuid/g' /tmp/structure_changes/dump_60_index_with_migrations.json
 sed -i -r 's/[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}/version_uuid/g' /tmp/structure_changes/dump_branch_index.json
-diff /tmp/structure_changes/dump_50_index_with_migrations.json /tmp/structure_changes/dump_branch_index.json --context=10
+diff /tmp/structure_changes/dump_60_index_with_migrations.json /tmp/structure_changes/dump_branch_index.json --context=10
