@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akeneo\Category\Infrastructure\EventSubscriber;
 
+use Akeneo\Category\Application\Enrichment\CleanCategoryDataLinkedToChannel;
 use Akeneo\Channel\Infrastructure\Component\Model\ChannelInterface;
 use Akeneo\Platform\Bundle\FeatureFlagBundle\FeatureFlag;
 use Akeneo\Tool\Bundle\BatchBundle\Job\JobInstanceRepository;
@@ -48,6 +49,7 @@ class CleanCategoryDataAfterChannelChangeSubscriber implements EventSubscriberIn
 
         $this->jobLauncher->launch($jobInstance, $this->tokenStorage->getToken()?->getUser(), [
             'channel_code' => $channel->getCode(),
+            'action' => CleanCategoryDataLinkedToChannel::CLEAN_CHANNEL_ACTION,
         ]);
     }
 
@@ -59,6 +61,15 @@ class CleanCategoryDataAfterChannelChangeSubscriber implements EventSubscriberIn
             return;
         }
 
-        ($this->cleanCategoryDataLinkedToChannel)($channel, CleanCategoryDataLinkedToChannel::CLEAN_CHANNEL_LOCALE_ACTION);
+        /** @var JobInstance|null $jobInstance */
+        $jobInstance = $this->jobInstanceRepository->findOneByIdentifier('clean_categories_enriched_values');
+        if (!$jobInstance instanceof JobInstance) {
+            return;
+        }
+
+        $this->jobLauncher->launch($jobInstance, $this->tokenStorage->getToken()?->getUser(), [
+            'channel_code' => $channel->getCode(),
+            'action' => CleanCategoryDataLinkedToChannel::CLEAN_CHANNEL_LOCALE_ACTION,
+        ]);
     }
 }

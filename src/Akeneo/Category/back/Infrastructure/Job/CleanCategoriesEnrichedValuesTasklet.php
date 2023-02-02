@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Akeneo\Category\Infrastructure\Job;
 
 use Akeneo\Category\Application\Enrichment\CleanCategoryDataLinkedToChannel;
+use Akeneo\Channel\Infrastructure\Component\Model\ChannelInterface;
 use Akeneo\Tool\Component\Batch\Model\StepExecution;
 use Akeneo\Tool\Component\Connector\Step\TaskletInterface;
+use Akeneo\Tool\Component\StorageUtils\Repository\IdentifiableObjectRepositoryInterface;
 
 /**
  * @copyright 2023 Akeneo SAS (https://www.akeneo.com)
@@ -17,6 +19,7 @@ class CleanCategoriesEnrichedValuesTasklet implements TaskletInterface
     private StepExecution $stepExecution;
 
     public function __construct(
+        private readonly IdentifiableObjectRepositoryInterface $channelRepository,
         private readonly CleanCategoryDataLinkedToChannel $cleanCategoryDataLinkedToChannel,
     ) {
     }
@@ -32,6 +35,12 @@ class CleanCategoriesEnrichedValuesTasklet implements TaskletInterface
     {
         $jobParameters = $this->stepExecution->getJobParameters();
         $channelCode = $jobParameters->get('channel_code');
-        ($this->cleanCategoryDataLinkedToChannel)($channelCode);
+        /** @var ?ChannelInterface $channel */
+        $channel = $this->channelRepository->findOneByIdentifier($channelCode);
+        if (null === $channel) {
+            return;
+        }
+        $action = $jobParameters->get('action');
+        ($this->cleanCategoryDataLinkedToChannel)($channel, $action);
     }
 }

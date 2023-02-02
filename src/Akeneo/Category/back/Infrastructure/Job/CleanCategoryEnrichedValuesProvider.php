@@ -26,12 +26,13 @@ class CleanCategoryEnrichedValuesProvider implements ConstraintCollectionProvide
     public function getDefaultValues(): array
     {
         return [
-            'channel_code' => '',
+            'channel_code' => null,
+            'action' => '',
         ];
     }
 
     /**
-     * channel_code: deleted channel's code to be cleaned from category enriched values.
+     * channel: deleted channel's code to be cleaned from category enriched values.
      */
     public function getConstraintCollection(): Collection
     {
@@ -39,6 +40,7 @@ class CleanCategoryEnrichedValuesProvider implements ConstraintCollectionProvide
             [
                 'fields' => [
                     'channel_code' => new Type('string'),
+                    'action' => new Type('string'),
                 ],
             ],
         );

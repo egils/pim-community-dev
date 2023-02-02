@@ -26,6 +26,7 @@ services:
 
     Akeneo\Category\Infrastructure\Job\CleanCategoriesEnrichedValuesTasklet:
         arguments:
+            - '@pim_catalog.repository.channel'
             - '@Akeneo\Category\Application\Enrichment\CleanCategoryDataLinkedToChannel'
 
     # job parameters

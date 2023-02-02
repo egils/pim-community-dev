@@ -6,6 +6,8 @@ namespace Specification\Akeneo\Category\Infrastructure\Job;
 
 use Akeneo\Category\Application\Enrichment\CleanCategoryDataLinkedToChannel;
 use Akeneo\Category\Infrastructure\Job\CleanCategoriesEnrichedValuesTasklet;
+use Akeneo\Channel\API\Query\Channel;
+use Akeneo\Channel\API\Query\LabelCollection;
 use Akeneo\Tool\Component\Batch\Job\JobParameters;
 use Akeneo\Tool\Component\Batch\Model\StepExecution;
 use Akeneo\Tool\Component\Connector\Step\TaskletInterface;
@@ -38,9 +40,11 @@ class CleanCategoriesEnrichedValuesTaskletSpec extends ObjectBehavior
         CleanCategoryDataLinkedToChannel $cleanCategoryDataLinkedToChannel,
     ) {
         $stepExecution->getJobParameters()->willReturn($jobParameters);
-        $jobParameters->get('channel_code')->willReturn('deleted_channel_code');
 
-        $cleanCategoryDataLinkedToChannel->__invoke('deleted_channel_code')->shouldBeCalled();
+        $jobParameters->get('channel_code')->willReturn('deleted_channel_code');
+        $jobParameters->get('action')->willReturn(CleanCategoryDataLinkedToChannel::CLEAN_CHANNEL_ACTION);
+
+        $cleanCategoryDataLinkedToChannel->__invoke('deleted_channel_code', CleanCategoryDataLinkedToChannel::CLEAN_CHANNEL_ACTION)->shouldBeCalled();
 
         $this->setStepExecution($stepExecution);
         $this->execute();
