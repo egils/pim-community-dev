@@ -39,10 +39,6 @@ echo "##"
 echo "## STEP 1: install 6.0 database and index"
 echo "##"
 
-echo "Save composer.lock"
-cp composer.lock /tmp/composer.lock
-cp composer.json /tmp/composer.json
-
 echo "Checkout EE 6.0 branch..."
 git branch -D real60 || true
 git checkout -b real60 --track origin/6.0
@@ -63,11 +59,7 @@ fi
 
 echo "Export env vars from .env..."
 source .env
-
-echo "Use the database akeneo_pim_test..."
-echo "APP_DATABASE_NAME=akeneo_pim_test" >> .env.test.local
-echo "APP_PRODUCT_AND_PRODUCT_MODEL_INDEX_NAME=akeneo_pim_product_and_product_model_test" >> .env.test.local
-echo "APP_CONNECTION_ERROR_INDEX_NAME=akeneo_connectivity_connection_error_test" >> .env.test.local
+source .env.test
 
 echo "Clean cache..."
 APP_ENV=test make cache
@@ -88,10 +80,10 @@ git checkout -- .
 
 echo "Checkout EE PR branch (or 7.0 if it does not exist)..."
 git checkout $PR_BRANCH || git checkout 7.0
-cp /tmp/composer.lock ./composer.lock
-cp /tmp/composer.json ./composer.json
-touch composer.lock
-touch composer.json
+curl --output /dev/null --silent --head --fail https://github.com/akeneo/pim-community-dev/tree/${PR_BRANCH} && \
+    sed -i "s#akeneo/pim-community-dev\": \"7.0.x-dev@dev#akeneo/pim-community-dev\": \"dev-${PR_BRANCH}#" composer.json || \
+    echo "No CE branch $PR_BRANCH found. I don't touch the EE dependencies."
+
 sudo chown 1000:1000 -R .
 make vendor
 
@@ -102,11 +94,7 @@ fi
 
 echo "Export env vars from .env..."
 source .env
-
-echo "Use the database akeneo_pim_test..."
-echo "APP_DATABASE_NAME=akeneo_pim_test" >> .env.test.local
-echo "APP_PRODUCT_AND_PRODUCT_MODEL_INDEX_NAME=akeneo_pim_product_and_product_model_test" >> .env.test.local
-echo "APP_CONNECTION_ERROR_INDEX_NAME=akeneo_connectivity_connection_error_test" >> .env.test.local
+source .env.test
 
 echo "Clean cache..."
 APP_ENV=test make cache
@@ -115,7 +103,7 @@ echo "Launch branch migrations..."
 docker-compose run --rm php bin/console doctrine:migrations:migrate --env=test --no-interaction
 
 echo "Dump 6.0 with migrations database..."
-docker-compose exec -T mysql mysqldump --no-data --skip-opt --skip-comments --password=$APP_DATABASE_PASSWORD --user=$APP_DATABASE_USER $APP_DATABASE_NAME | sed 's/ AUTO_INCREMENT=[0-9]*\b//g' > /tmp/structure_changes/dump_60_database_with_migrations.sql
+docker-compose exec -T mysql mysqldump --no-data --skip-opt --skip-comments --password=root --user=root $APP_DATABASE_NAME | sed 's/ AUTO_INCREMENT=[0-9]*\b//g' > /tmp/structure_changes/dump_60_database_with_migrations.sql
 
 echo "Dump 6.0 with migrations index..."
 docker-compose exec -T elasticsearch curl -XGET "$APP_INDEX_HOSTS/_all/_mapping"|json_pp --json_opt=canonical,pretty > /tmp/structure_changes/dump_60_index_with_migrations.json
@@ -130,7 +118,7 @@ echo "Install fresh branch database and indexes..."
 APP_ENV=test make database
 
 echo "Dump branch database..."
-docker-compose exec -T mysql mysqldump --no-data --skip-opt --skip-comments --password=$APP_DATABASE_PASSWORD --user=$APP_DATABASE_USER $APP_DATABASE_NAME | sed 's/ AUTO_INCREMENT=[0-9]*\b//g' > /tmp/structure_changes/dump_branch_database.sql
+docker-compose exec -T mysql mysqldump --no-data --skip-opt --skip-comments --password=root --user=root $APP_DATABASE_NAME | sed 's/ AUTO_INCREMENT=[0-9]*\b//g' > /tmp/structure_changes/dump_branch_database.sql
 
 echo "Dump branch index..."
 docker-compose exec -T elasticsearch curl -XGET "$APP_INDEX_HOSTS/_all/_mapping"|json_pp --json_opt=canonical,pretty > /tmp/structure_changes/dump_branch_index.json
