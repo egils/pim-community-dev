@@ -12,7 +12,7 @@
 #   - step 3: Install fresh branch database and indexes. Dump the results.
 #   - step 4: Compare the results of step 3 and step 4. If there is a diff, that means a migration is missing.
 
-set -eu
+set -eux
 
 usage() {
     echo "Usage: $0 BRANCH"
@@ -62,7 +62,7 @@ if [ -d "vendor/akeneo/pim-community-dev" ]; then
 fi
 
 echo "Export env vars from .env..."
-export $(cat .env)
+source .env
 
 echo "Use the database akeneo_pim_test..."
 echo "APP_DATABASE_NAME=akeneo_pim_test" >> .env.test.local
@@ -101,7 +101,7 @@ if [ -d "vendor/akeneo/pim-community-dev" ]; then
 fi
 
 echo "Export env vars from .env..."
-export $(cat .env | grep -v "^#")
+source .env
 
 echo "Use the database akeneo_pim_test..."
 echo "APP_DATABASE_NAME=akeneo_pim_test" >> .env.test.local
