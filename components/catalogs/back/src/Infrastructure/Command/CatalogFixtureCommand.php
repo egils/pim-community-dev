@@ -207,6 +207,10 @@ class CatalogFixtureCommand extends Command
             },
             "is_released": {
               "type": "boolean"
+            },
+            "price_number": {
+              "type": "number",
+              "title": "Price number"
             }
           }
         }
